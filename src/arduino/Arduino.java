@@ -9,6 +9,7 @@ import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 public class Arduino implements SerialPortEventListener {
@@ -29,7 +30,7 @@ public class Arduino implements SerialPortEventListener {
     private char[] aChar = new char[1024];
     private int numero = 0;
     // para interaccion con la clase que le llama
-    private ArduinoTest miArduino;
+    private Counter miCounter;
 
     public int getDATA_RATE() {
         return DATA_RATE;
@@ -55,8 +56,8 @@ public class Arduino implements SerialPortEventListener {
         this.MODE_DATA = MODE_DATA;
     }
 
-    public void initializeArduinoConnection(ArduinoTest at) {
-        miArduino = at;
+    public void initializeArduinoConnection(Counter c) {
+        miCounter = c;
         CommPortIdentifier portId = null;
         Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
 
@@ -98,7 +99,7 @@ public class Arduino implements SerialPortEventListener {
     }
 
     public byte getCharAsByte(char c) {
-        byte [] b = new byte[1];
+        byte[] b = new byte[1];
         b[0] = (byte) ((byte) c & 0x00FF);
         return b[0];
     }
@@ -122,7 +123,7 @@ public class Arduino implements SerialPortEventListener {
 
     public void sendBytes(char c) {
         try {
-            System.out.println("Enviando " + c);               
+            System.out.println("Enviando " + c);
             output.write(getCharAsByte(c));
         } catch (IOException e) {
             System.out.println("Error sending data");
@@ -152,6 +153,16 @@ public class Arduino implements SerialPortEventListener {
         return output;
     }
 
+    private byte[] RecibirDatos(int numero) throws IOException {
+        byte[] response = new byte[numero];
+        for (int i = 0; i < numero; i++) {
+            byte output = 0;
+            output = (byte) input.read();
+            response[i] = output;
+        }
+        return response;
+    }
+
     private int RecibirDatosInt() throws IOException {
         int output = 0;
         output = input.read();
@@ -171,7 +182,7 @@ public class Arduino implements SerialPortEventListener {
                         switch (datosString) {
                             case 10:
                                 break;
-                            case 13:                                
+                            case 13:
                                 char[] fChar = new char[numero];
                                 for (int i = 0; i < numero; i++) {
                                     fChar[i] = aChar[i];
@@ -180,23 +191,64 @@ public class Arduino implements SerialPortEventListener {
                                     aChar[i] = 0;
                                 }
                                 numero = 0;
-                                miArduino.getData(String.valueOf(fChar));
+                                miCounter.setStringValue(String.valueOf(fChar));
                                 break;
-                            default:                                
+                            default:
                                 aChar[numero++] = (char) datosString;
                                 break;
                         }
                         break;
+
                     case ArduinoVariables.MODO_INT:
                         int dataInt;
-                        dataInt = RecibirDatosInt(); // Se invoca la funci�n RecibirDatos()
-                        miArduino.getInt(dataInt);
+                        dataInt = RecibirDatosInt();
+                        miCounter.setIntValue(dataInt);
                         break;
 
                     case ArduinoVariables.MODO_BYTE:
                         byte dataByte;
-                        dataByte = RecibirDatos(); // Se invoca la funci�n RecibirDatos()
-                        miArduino.getByte(dataByte);
+                        byte[] buffer;
+
+                        dataByte = RecibirDatos(); // Se invoca la funcion RecibirDatos()
+                        // miArduino.getByte(dataByte);
+
+                        switch (dataByte) {
+                            case 0x01:
+                                System.out.println("Recibido un byte");
+                                dataByte = RecibirDatos();
+                                miCounter.setByteValue(dataByte);
+                                break;
+
+                            case 0x02:
+                                System.out.println("Recibido un integer");
+                                buffer = RecibirDatos(2);
+                                int responseInt = getArrayBufferAsInt(buffer);
+                                miCounter.setIntValue(responseInt);
+                                break;
+
+                            case 0x03:
+                                System.out.println("Recibido un float");
+                                buffer = RecibirDatos(4);
+                                float responseFloat = getArrayBufferAsFloat(buffer);
+                                miCounter.setFloatValue(responseFloat);
+                                break;
+
+                            case 0x05:
+                                System.out.println("Recibido un string");
+                                buffer = RecibirDatos(2);
+                                int longitud = getArrayBufferAsInt(buffer);
+                                System.out.println("Longitud " + String.valueOf(longitud));
+                                buffer = RecibirDatos(longitud);
+                                String responseString = new String(buffer);
+                                miCounter.setStringValue(responseString);
+                                break;
+
+                            default:
+                                break;
+
+                        }
+
+
                         break;
                     default:
                         break;
@@ -213,6 +265,4 @@ public class Arduino implements SerialPortEventListener {
             }
         }
     }
-
-
 }

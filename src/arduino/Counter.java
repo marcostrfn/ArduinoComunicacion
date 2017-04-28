@@ -13,24 +13,44 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class Counter {
 
-    private int value = 0;
+    private int intValue = 0;
     private float floatValue = 0;
+    private byte byteValue = 0;
+    private String stringValue;
     private final List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
 
     public interface Listener {
-        void afterValueChanged(Counter counter);
+
+        void afterValueIntChanged(Counter counter);
+
         void afterValueFloatChanged(Counter counter);
+
+        void afterValueStringChanged(Counter counter);
+
+        void afterValueByteChanged(Counter counter);
     }
 
-    private void fireAfterValueChanged() {
+    private void fireAfterValueIntChanged() {
         for (Listener listener : listeners) {
-            listener.afterValueChanged(this);
+            listener.afterValueIntChanged(this);
         }
     }
 
     private void fireAfterValueFloatChanged() {
         for (Listener listener : listeners) {
             listener.afterValueFloatChanged(this);
+        }
+    }
+
+    private void fireAfterValueStringChanged() {
+        for (Listener listener : listeners) {
+            listener.afterValueStringChanged(this);
+        }
+    }
+
+    private void fireAfterValueByteChanged() {
+        for (Listener listener : listeners) {
+            listener.afterValueByteChanged(this);
         }
     }
 
@@ -43,14 +63,38 @@ public class Counter {
         fireAfterValueFloatChanged();
     }
 
-    public int getValue() {
-        return value;
+    public int getIntValue() {
+        return intValue;
     }
 
-    public void setValue(int value) {
-        this.value = value;
-        fireAfterValueChanged();
+    public void setIntValue(int intValue) {
+        this.intValue = intValue;
+        fireAfterValueIntChanged();
     }
+
+    public byte getByteValue() {
+        return byteValue;
+    }
+
+    public void setByteValue(byte byteValue) {
+        this.byteValue = byteValue;
+         fireAfterValueByteChanged();
+    }
+
+    public String getStringValue() {
+        return stringValue;
+    }
+
+    public void setStringValue(String stringValue) {
+        this.stringValue = stringValue;
+         fireAfterValueStringChanged();
+    }
+
+
+
+
+
+
 
     public void addListener(Listener listener) {
         listeners.add(listener);

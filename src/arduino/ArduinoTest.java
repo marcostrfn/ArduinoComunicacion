@@ -23,7 +23,7 @@ public class ArduinoTest implements ArduinoControl {
     }
 
     public ArduinoTest() {
-        a.setDATA_RATE(115200);
+        a.setDATA_RATE(9600);
         a.setPORT_NAME("COM34");
         // a.setMODE_DATA(ArduinoVariables.MODO_BYTE);
         a.setMODE_DATA(ArduinoVariables.MODO_BYTE);
@@ -44,6 +44,7 @@ public class ArduinoTest implements ArduinoControl {
                     c = 'Z';
                 }
                 a.sendBytes(c);
+                System.out.println();
             }
             public void afterValueFloatChanged(Counter counter) {
                 System.out.println("El valor del Float " + counter.getFloatValue());
@@ -96,11 +97,5 @@ public class ArduinoTest implements ArduinoControl {
         }
 
     }
-
-    // packing an array of 4 bytes to an int, big endian
-    int fromByteArray(byte[] bytes) {
-        return 0xFF << 24 | (0xFF) << 16 | (bytes[1] & 0xFF) << 8 | (bytes[0] & 0xFF);
-    }
-
-   
+  
 }

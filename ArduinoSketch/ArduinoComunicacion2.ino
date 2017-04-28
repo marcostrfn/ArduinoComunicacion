@@ -7,7 +7,6 @@ RXTXJavaComunicacion rxtx(9600);
 byte inComingByte;   
 byte outComingByte;   
 
-
 int myInt;
 float myFloat;
 
@@ -19,7 +18,7 @@ void setup() {
   myFloat = .0;
   inComingByte = 0;
   outComingByte = B00000001; 
-  
+
 }
 
 
@@ -29,6 +28,11 @@ void modoBytes() {
   rxtx.sendByte(outComingByte);
   rxtx.sendInt(myInt);
   rxtx.sendFloat(myFloat);
+
+  char buffer[50];  
+  sprintf(buffer, "Arduino %5,2f", myFloat);  
+  rxtx.sendString(buffer); 
+  
 }
 
 void modoString() {
